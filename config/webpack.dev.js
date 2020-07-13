@@ -4,12 +4,16 @@ const helpers = require('./helpers');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+var BundleAnalyzerPlugin=  require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const ENV= process.env.NODE_ENV = process.env.ENV = 'development';
 
 module.exports = {
 
     entry: {
-        'ng1': './public/index.ts'
+        'polyfills': './public/polyfills.ts',
+        'vendor': './public/vendor.ts',
+        'ng1': './public/index.ts',
+        'app': './public/main.ts'
     },
 
     output: {
@@ -43,6 +47,11 @@ module.exports = {
             minChunks: Infinity
         }),
 
+        new webpack.optimize.CommonsChunkPlugin({
+            name: 'vendor',
+            chunks: ['vendor', 'app']
+        }),
+
         new webpack.SourceMapDevToolPlugin({
             "filename": "[file].map[query]",
             "moduleFilenameTemplate": "[resource-path]",
@@ -51,14 +60,25 @@ module.exports = {
         }),
 
         new HtmlWebpackPlugin({
-            template: 'config/index.html'
+            template: 'config/index.html',
+            chunks: ['app']
         }),
 
         new webpack.DefinePlugin({
             'process.env': {
                 'ENV': JSON.stringify(ENV)
             }
-        })
+        }),
+
+        new webpack.ContextReplacementPlugin(
+        /angular(\\|\/)core(\\|\/)@angular/,
+        helpers.root('./src'),
+        {}
+        ),
+
+        // new BundleAnalyzerPlugin({
+        //     analyzerMode: 'static'
+        // })
 
     ]
 }
